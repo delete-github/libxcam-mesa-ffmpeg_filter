@@ -228,7 +228,7 @@ GLTexture::destroy_texture (SmartPtr<GLTexture>& tex)
     SmartPtr<EGLBase> egl_base = EGLBase::instance ();
 
     if (false == egl_base->destroy_image (_egl_image)) {
-        XCAM_LOG_WARNING ("destroy egl image failed!");
+        // XCAM_LOG_WARNING ("destroy egl image failed!");
         return XCAM_RETURN_ERROR_EGL;
     }
 

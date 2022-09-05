@@ -74,12 +74,14 @@ private:
     FeatureMatchMode          _fm_mode;
     uint32_t                  _fm_frames;
     FeatureMatchStatus        _fm_status;
+    Device                    _device;
 
     FMConfig                  _fm_cfg;
     FMRegionRatio             _fm_region_ratio;
     StitchInfo                _stich_info;
     BowlDataConfig            _bowl_cfg;
     float                     _viewpoints_range[XCAM_STITCH_FISHEYE_MAX_NUM];
+    const char                *_node_name;
 };
 
 }
