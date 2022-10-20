@@ -36,7 +36,7 @@
 #define MAP_FACTOR_X  16
 #define MAP_FACTOR_Y  16
 
-#define DUMP_BUFFER 0
+#define DUMP_BUFFER 1
 
 #define XCAM_FISHEYE_IMG_ROI_RADIUS 0
 
@@ -1067,7 +1067,7 @@ GLStitcher::stitch_buffers (const VideoBufferList &in_bufs, SmartPtr<VideoBuffer
         VideoBufferInfo info = param->out_buf->get_video_info ();
         char file_name[256];
         snprintf (file_name, 256, "gl_stitcher_hwcodec_gl_outbuf_%dx%d.nv12", info.width, info.height);
-        FILE* fbo_file = fopen (file_name, "wb");
+        FILE* fbo_file = fopen (file_name, "+wb");
         if (fbo_file != NULL) {
             fwrite (param->out_buf->map (), info.width * info.height * 3 / 2, 1, fbo_file);
             fclose (fbo_file);
@@ -1194,6 +1194,7 @@ GLStitcher::start_work (const SmartPtr<Parameters> &base)
     }
 
     if (param->enable_dmabuf) {
+        printf("export_dma_buffer------\n");
         ret = _impl->export_dma_buffer (param);
         XCAM_FAIL_RETURN (
             ERROR, xcam_ret_is_ok (ret), ret,

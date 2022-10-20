@@ -60,6 +60,8 @@ public:
 
     static XCamReturn destroy_texture (SmartPtr<GLTexture>& tex);
 
+    void save_to_ppm (int width, int height, uint8_t *pixels);
+
     GLuint get_texture_id () const {
         return _texture_id;
     }

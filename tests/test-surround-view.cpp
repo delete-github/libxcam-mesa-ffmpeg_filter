@@ -462,6 +462,7 @@ single_frame (
     const SVStreams &ins, const SVStreams &outs,
     const SVOutConfig &out_config, int loop, bool enable_dmabuf = false)
 {
+    clock_t start = clock();
     for (uint32_t i = 0; i < ins.size (); ++i) {
         CHECK (ins[i]->rewind (), "rewind buffer from file(%s) failed", ins[i]->get_file_name ());
     }
@@ -520,7 +521,9 @@ single_frame (
             FPS_CALCULATION (surround_view, XCAM_OBJ_DUR_FRAME_NUM);
         }
     }
-
+    clock_t end = clock();
+    double elapsed_secs = static_cast<double>(end - start) / CLOCKS_PER_SEC;
+    printf("time:%f \n", elapsed_secs);
     return 0;
 }
 
@@ -530,6 +533,7 @@ multi_frame (
     const SVStreams &ins, const SVStreams &outs,
     const SVOutConfig &out_config, int loop, bool enable_dmabuf = false)
 {
+    clock_t start = clock();
     XCamReturn ret = XCAM_RETURN_NO_ERROR;
 
     VideoBufferList in_buffers;
@@ -597,7 +601,9 @@ multi_frame (
             }
         } while (true);
     }
-
+    clock_t end = clock();
+    double elapsed_secs = static_cast<double>(end - start) / CLOCKS_PER_SEC;
+    printf("time:%f \n", elapsed_secs);
     return 0;
 }
 

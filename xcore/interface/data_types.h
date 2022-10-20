@@ -62,12 +62,6 @@ enum GeoMapScaleMode {
     ScaleDualCurve
 };
 
-enum Device {
-    RenderD128 = 0,
-    RenderD129,
-    Card0,
-};
-
 struct Rect {
     int32_t pos_x, pos_y;
     int32_t width, height;

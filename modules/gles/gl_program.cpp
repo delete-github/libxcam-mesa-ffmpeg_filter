@@ -151,6 +151,7 @@ GLProgram::link ()
 XCamReturn
 GLProgram::use ()
 {
+    printf("GLProgram::use _program_i:%d\n", _program_id);
     XCAM_ASSERT (_program_id);
     XCAM_FAIL_RETURN (
         WARNING, _state == StateLinked && !_shaders.empty (), XCAM_RETURN_ERROR_PARAM,
@@ -170,6 +171,7 @@ GLProgram::use ()
 XCamReturn
 GLProgram::disuse ()
 {
+    printf("disuse\n");
     if (_state != StateInUse)
         return XCAM_RETURN_BYPASS;
 

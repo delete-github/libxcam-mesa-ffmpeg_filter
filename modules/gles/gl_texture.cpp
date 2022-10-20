@@ -97,6 +97,7 @@ GLTexture::create_texture (
     GLenum target,
     GLenum usage)
 {
+    printf("GLTexture::create_texture unit test\n");
     XCAM_ASSERT (width > 0);
     XCAM_ASSERT (height > 0);
     XCAM_LOG_DEBUG ("GLTexture::create_texture from buffer: width:%d, height:%d, format:%s", width, height, xcam_fourcc_to_string (format));
@@ -114,7 +115,16 @@ GLTexture::create_texture (
         ERROR, texture_id && (error == GL_NO_ERROR), NULL,
         "GL texture creation failed in glGenTextures, error flag: %s", gl_error_string (error));
 
-    glBindTexture (target, texture_id);
+    if (width > 7000) {
+        printf ("create out texture\n");
+        GLuint tex;
+        glGenTextures (1, &tex);
+        glBindTexture (GL_TEXTURE_2D, tex);
+        error = gl_error ();
+        printf("debug  texture id %d, error strng %s\n", error, gl_error_string (error));
+    } else
+        glBindTexture (target, texture_id);
+
     XCAM_FAIL_RETURN (
         ERROR, (error = gl_error ()) == GL_NO_ERROR, NULL,
         "GL texture creation failed in glBindTexture:%d, error flag: %s",
@@ -136,6 +146,32 @@ GLTexture::create_texture (
     return new GLTexture (width, height, format, texture_id, target, usage);
 }
 
+
+void GLTexture::save_to_ppm (int width, int height, uint8_t *pixels)
+{
+    char file_name[256];
+    snprintf (file_name, 256, "/home/chang/GLTexture_dump_%dx%d.nv12.ppm", width, height);
+    FILE* fp = fopen(file_name, "wb");
+
+    if (NULL == fp)
+    {
+        printf("save_to_ppm failed to create ppm file\n");
+        return;
+    }
+
+    fprintf(fp, "P6\n%d %d\n255\n", width, height);
+    for (auto j = 0u; j < width; ++j)
+    {
+        for (auto i = 0u; i < height; ++i)
+        {
+            char color[3] = {*pixels, *pixels, *pixels};
+            fwrite(color, 1, 3, fp);
+            pixels++;
+        }
+    }
+    fclose(fp);
+}
+
 EGLImage GLTexture::_egl_image;
 
 SmartPtr<GLTexture>
@@ -144,6 +180,7 @@ GLTexture::create_texture (
     GLenum target,
     GLenum usage)
 {
+    printf("GLTexture::create_texture ffmpeg\n");
     SmartPtr<DmaVideoBuffer> dma_buf = buf.dynamic_cast_ptr<DmaVideoBuffer> ();
     const VideoBufferInfo &info = dma_buf->get_video_info ();
 
@@ -197,7 +234,16 @@ GLTexture::create_texture (
     PFNGLEGLIMAGETARGETTEXTURE2DOESPROC glEGLImageTargetTexture2DOES =
         (PFNGLEGLIMAGETARGETTEXTURE2DOESPROC)eglGetProcAddress ("glEGLImageTargetTexture2DOES");
 
-    glEGLImageTargetTexture2DOES (target, _egl_image);
+
+
+    if (width > 7000) {
+        printf("output\n");
+        glTexImage2D (target, 0, GL_RED, width, height * 3 / 2, 0, GL_RED, GL_UNSIGNED_BYTE, NULL);
+    } else {
+        printf("input\n");
+        glEGLImageTargetTexture2DOES (target, _egl_image);
+    }
+
     XCAM_FAIL_RETURN (
         ERROR, (error = gl_error ()) == GL_NO_ERROR, NULL,
         "EGL image target texture2D:%d, error flag: %s",
@@ -241,6 +287,8 @@ GLTexture::dump_texture_image (const char *file_name)
     uint32_t width = get_width ();
     uint32_t height = get_height ();
     uint32_t format = get_format ();
+
+    // printf("GLTexture::dump_texture_image  call   width:%d  height:%d\n", width, height);
 
     uint8_t* texture_data = NULL;
     if (V4L2_PIX_FMT_NV12 == format) {
@@ -294,6 +342,8 @@ GLTexture::dump_texture_image (const char *file_name)
         fwrite (texture_data, height * width * 3 / 2, 1, fbo_file);
         fclose (fbo_file);
     }
+
+    save_to_ppm (width, height, texture_data);
 
     delete [] texture_data;
 }

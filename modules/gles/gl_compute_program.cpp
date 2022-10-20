@@ -145,12 +145,15 @@ GLComputeProgram::barrier (GLbitfield barrier_bit)
 XCamReturn
 GLComputeProgram::dispatch ()
 {
+    // printf("glDispatchCompute\n");
     XCAM_FAIL_RETURN (
         ERROR, check_groups_size (_groups_size), XCAM_RETURN_ERROR_PARAM,
         "GLComputeProgram(%s) dispatch invalid groups size: %dx%dx%d",
         XCAM_STR (get_name ()), _groups_size.x, _groups_size.y, _groups_size.z);
 
     glDispatchCompute (_groups_size.x, _groups_size.y, _groups_size.z);
+    printf("GLComputeProgram(%s) dispatch failed, groups size: %dx%dx%d\n",
+           XCAM_STR (get_name ()), _groups_size.x, _groups_size.y, _groups_size.z);
 
     GLenum error = gl_error ();
     XCAM_FAIL_RETURN (

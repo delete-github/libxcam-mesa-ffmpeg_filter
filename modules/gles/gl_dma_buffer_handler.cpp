@@ -95,6 +95,7 @@ public:
 
     virtual XCamReturn configure_resource (const SmartPtr<ImageHandler::Parameters> &param);
     virtual XCamReturn start (const SmartPtr<ImageHandler::Parameters> &param);
+    void save_to_ppm (int width, int height, uint8_t *pixels);
 };
 
 Impl::Impl (GLDmaBufferHandler *handler)
@@ -213,6 +214,31 @@ DmaBufferWriter::configure_resource (const SmartPtr<ImageHandler::Parameters> &p
     return XCAM_RETURN_NO_ERROR;
 }
 
+void DmaBufferWriter::save_to_ppm (int width, int height, uint8_t *pixels)
+{
+    char file_name[256];
+    snprintf (file_name, 256, "/home/chang/GLTexture_dump_%dx%d.nv12.ppm", width, height);
+    FILE* fp = fopen(file_name, "wb");
+
+    if (NULL == fp)
+    {
+        printf("save_to_ppm failed to create ppm file\n");
+        return;
+    }
+
+    fprintf(fp, "P6\n%d %d\n255\n", width, height);
+    for (auto j = 0u; j < width; ++j)
+    {
+        for (auto i = 0u; i < height; ++i)
+        {
+            char color[3] = {*pixels, *pixels, *pixels};
+            fwrite(color, 1, 3, fp);
+            pixels++;
+        }
+    }
+    fclose(fp);
+}
+
 XCamReturn
 DmaBufferWriter::start (const SmartPtr<ImageHandler::Parameters> &param)
 {
@@ -229,6 +255,42 @@ DmaBufferWriter::start (const SmartPtr<ImageHandler::Parameters> &param)
     cmds.push_back (new GLCmdBindTexture (_texture, 1));
 
     _shader->set_commands (cmds);
+
+
+// // /*------------glClear---------------*/
+    GLuint fbo = 0;
+    uint8_t *pixels_data = new uint8_t [7680 * 3840 * 3 / 2];
+    glBindTexture(GL_TEXTURE_2D, _texture->get_texture_id());
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, _texture->get_texture_id(), 0);
+    printf("_texture->get_texture_id():%d\n\n", _texture->get_texture_id());
+    glClearColor(0.4, 0.0, 1.0, 1.0);
+//     glClear(GL_COLOR_BUFFER_BIT);
+    glReadPixels(0, 0, 7680, 3840, GL_RED, GL_UNSIGNED_BYTE, pixels_data);
+
+    /*------------dumpTexture---------------*/
+    const char *file_name = "/home/chang/gl_dma_buffer_DmaBufferWriter.nv12";
+    FILE* fbo_file = fopen (file_name, "wb");
+    if (fbo_file != NULL) {
+        fwrite (pixels_data, 7680 * 3840 * 3 / 2, 1, fbo_file);
+        fclose (fbo_file);
+    }
+
+    // save_to_ppm (7680, 3840, pixels_data);
+
+
+
+    // if (ret == XCAM_RETURN_NO_ERROR)
+    // {
+    //     _texture->dump_texture_image ("out_texture.yuv");
+    //     GLenum err = gl_error ();
+    //     printf("GLTexture::create_texture   gl_error:%d    gl_error_string:%s\n", err, gl_error_string(err));
+    //     printf("eglgeterror%d\n\n", eglGetError());
+    //     return XCAM_RETURN_NO_ERROR;
+    // } else {
+    //     return XCAM_RETURN_ERROR_GLES;
+    // }
 
     return _shader->work (NULL);
 }
@@ -319,6 +381,10 @@ GLDmaBufferHandler::read_dma_buffer (const SmartPtr<DmaVideoBuffer> &dma_buf, Sm
 
     GLSync::flush ();
     GLSync::finish ();
+    impl->dump_texture_image ("readHandler", 0);
+    // GLenum err = gl_error ();
+    // printf("GLTexture::create_texture   gl_error:%d    gl_error_string:%s\n", err, gl_error_string(err));
+    // printf("eglgeterror%d\n\n", eglGetError());
     if (!out_buf.ptr ()) {
         out_buf = param->out_buf;
     }
@@ -350,6 +416,11 @@ GLDmaBufferHandler::write_dma_buffer (const SmartPtr<VideoBuffer> &in_buf, Smart
 
     GLSync::flush ();
     GLSync::finish ();
+
+    impl->dump_texture_image ("GLDmaBufferHandler", 0);
+    GLenum err = gl_error ();
+    printf("GLTexture::create_texture   gl_error:%d    gl_error_string:%s\n", err, gl_error_string(err));
+    printf("eglgeterror%d\n\n", eglGetError());
 
     return ret;
 }
